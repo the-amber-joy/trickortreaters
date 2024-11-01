@@ -10,10 +10,7 @@ let totalPeople = 0;
 
 const promptUser = () => {
   if (fs.existsSync(`groups_log_${new Date().getFullYear()}.txt`)) {
-    const data = fs.readFileSync(
-      `groups_log_${new Date().getFullYear()}.txt`,
-      "utf8",
-    );
+    const data = fs.readFileSync(`groups_log_${new Date().getFullYear()}.txt`, "utf8");
     const lines = data.split("\n").filter((line) => line.startsWith("Group"));
     groups = lines.map((line) => {
       return parseInt(line.split(": ")[1].split(" ")[0], 10);
