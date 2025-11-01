@@ -1,4 +1,5 @@
 // Utility functions extracted for testing
+const fs = require("fs");
 
 /**
  * Converts 24-hour time format to 12-hour format with AM/PM
@@ -119,6 +120,71 @@ const formatTableData = (groupsData, timeFormatter = formatTime12Hour) => {
   }, {});
 };
 
+/**
+ * Loads existing groups data from file
+ * @param {string} filename - Path to the JSON file
+ * @returns {Array} Array of group objects, empty if file doesn't exist or error
+ */
+const loadGroupsData = (filename) => {
+  try {
+    if (fs.existsSync(filename)) {
+      const data = fs.readFileSync(filename, "utf8");
+      return JSON.parse(data);
+    }
+    return [];
+  } catch (error) {
+    console.error(`Error loading data from ${filename}:`, error.message);
+    return [];
+  }
+};
+
+/**
+ * Saves groups data to file
+ * @param {string} filename - Path to the JSON file
+ * @param {Array} groupsData - Array of group objects to save
+ * @returns {boolean} True if save was successful, false otherwise
+ */
+const saveGroupsData = (filename, groupsData) => {
+  try {
+    fs.writeFileSync(filename, JSON.stringify(groupsData, null, 2));
+    return true;
+  } catch (error) {
+    console.error(`Error saving data to ${filename}:`, error.message);
+    return false;
+  }
+};
+
+/**
+ * Displays the current groups data as a table
+ * @param {Array} groupsData - Array of group objects
+ */
+const displayGroupsTable = (groupsData) => {
+  if (groupsData.length === 0) {
+    console.log("No groups recorded yet.");
+    return;
+  }
+
+  console.clear();
+  console.table(formatTableData(groupsData));
+  console.log(`Total people: ${calculateTotalPeople(groupsData)}`);
+};
+
+/**
+ * Adds a new group to the existing groups data
+ * @param {Array} groupsData - Existing groups data
+ * @param {number} numPeople - Number of people in the new group
+ * @returns {Array} Updated groups data array
+ */
+const addNewGroup = (groupsData, numPeople) => {
+  const newGroup = createGroupObject(
+    groupsData.length + 1,
+    numPeople,
+    generateTimestamp(),
+  );
+
+  return [...groupsData, newGroup];
+};
+
 module.exports = {
   formatTime12Hour,
   generateDateString,
@@ -130,4 +196,8 @@ module.exports = {
   createGroupObject,
   generateTimestamp,
   formatTableData,
+  loadGroupsData,
+  saveGroupsData,
+  displayGroupsTable,
+  addNewGroup,
 };

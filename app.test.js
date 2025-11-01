@@ -11,6 +11,10 @@ const {
   createGroupObject,
   generateTimestamp,
   formatTableData,
+  loadGroupsData,
+  saveGroupsData,
+  displayGroupsTable,
+  addNewGroup,
 } = require("./utils");
 
 // Mock readline to avoid interactive issues during testing
@@ -203,6 +207,115 @@ describe("Trick or Treaters App", () => {
     test("should handle empty groups data", () => {
       const result = formatTableData([], mockFormatTime12Hour);
       expect(result).toEqual({});
+    });
+  });
+
+  describe("Data loading and saving functions", () => {
+    const testDir = path.join(__dirname, "test-data");
+    const testFile = path.join(testDir, "test_groups.json");
+
+    beforeEach(() => {
+      if (!fs.existsSync(testDir)) {
+        fs.mkdirSync(testDir, { recursive: true });
+      }
+    });
+
+    afterEach(() => {
+      if (fs.existsSync(testFile)) {
+        fs.unlinkSync(testFile);
+      }
+    });
+
+    test("should load existing groups data correctly", () => {
+      fs.writeFileSync(testFile, JSON.stringify(mockGroupsData, null, 2));
+      const result = loadGroupsData(testFile);
+      expect(result).toEqual(mockGroupsData);
+    });
+
+    test("should return empty array for non-existent file", () => {
+      const result = loadGroupsData("non-existent-file.json");
+      expect(result).toEqual([]);
+    });
+
+    test("should handle corrupted JSON gracefully", () => {
+      fs.writeFileSync(testFile, "invalid json content");
+      const result = loadGroupsData(testFile);
+      expect(result).toEqual([]);
+    });
+
+    test("should save groups data correctly", () => {
+      const success = saveGroupsData(testFile, mockGroupsData);
+      expect(success).toBe(true);
+
+      const savedData = JSON.parse(fs.readFileSync(testFile, "utf8"));
+      expect(savedData).toEqual(mockGroupsData);
+    });
+
+    test("should return false for invalid save path", () => {
+      const success = saveGroupsData("/invalid/path/file.json", mockGroupsData);
+      expect(success).toBe(false);
+    });
+  });
+
+  describe("Group management functions", () => {
+    test("should add new group correctly", () => {
+      const existingGroups = mockGroupsData.slice(0, 2);
+      const result = addNewGroup(existingGroups, 4);
+
+      expect(result).toHaveLength(3);
+      expect(result[2]).toMatchObject({
+        id: 3,
+        people: 4,
+      });
+      expect(result[2].timestamp).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    });
+
+    test("should not mutate original array", () => {
+      const originalGroups = [...mockGroupsData];
+      const result = addNewGroup(originalGroups, 5);
+
+      expect(originalGroups).toEqual(mockGroupsData);
+      expect(result).not.toBe(originalGroups);
+    });
+
+    test("should assign correct ID for empty groups", () => {
+      const result = addNewGroup([], 3);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(1);
+      expect(result[0].people).toBe(3);
+    });
+  });
+
+  describe("Display functions", () => {
+    // Mock console methods for testing
+    let consoleClearSpy, consoleTableSpy, consoleLogSpy;
+
+    beforeEach(() => {
+      consoleClearSpy = jest.spyOn(console, "clear").mockImplementation();
+      consoleTableSpy = jest.spyOn(console, "table").mockImplementation();
+      consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
+    });
+
+    afterEach(() => {
+      consoleClearSpy.mockRestore();
+      consoleTableSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    });
+
+    test("should display groups table correctly", () => {
+      displayGroupsTable(mockGroupsData);
+
+      expect(consoleClearSpy).toHaveBeenCalled();
+      expect(consoleTableSpy).toHaveBeenCalled();
+      expect(consoleLogSpy).toHaveBeenCalledWith("Total people: 11");
+    });
+
+    test("should handle empty groups gracefully", () => {
+      displayGroupsTable([]);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith("No groups recorded yet.");
+      expect(consoleTableSpy).not.toHaveBeenCalled();
     });
   });
 });
