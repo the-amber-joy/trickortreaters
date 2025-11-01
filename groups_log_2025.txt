@@ -1,0 +1,16 @@
+Group 1: 2 people
+Group 2: 2 people
+Group 3: 3 people
+Group 4: 2 people
+Group 5: 3 people
+Group 6: 3 people
+Group 7: 3 people
+Group 8: 5 people
+Group 9: 5 people
+Group 10: 2 people
+Group 11: 2 people
+Group 12: 6 people
+Group 13: 2 people
+
+Current count of groups: 13
+Total people: 40
