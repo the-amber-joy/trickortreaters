@@ -6,25 +6,48 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 let groups = [];
+let groupsData = []; // Store full group objects with timestamps
 let totalPeople = 0;
 
+// Function to convert 24-hour time to 12-hour format with AM/PM
+const formatTime12Hour = (timeString) => {
+  const [hours, minutes, seconds] = timeString.split(":");
+  const date = new Date();
+  date.setHours(
+    parseInt(hours, 10),
+    parseInt(minutes, 10),
+    parseInt(seconds, 10),
+  );
+  return date.toLocaleTimeString("en-US", {
+    hour12: true,
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
+
 const promptUser = () => {
-  if (fs.existsSync(`groups_log_${new Date().getFullYear()}.txt`)) {
-    const data = fs.readFileSync(
-      `groups_log_${new Date().getFullYear()}.txt`,
-      "utf8",
-    );
-    const lines = data.split("\n").filter((line) => line.startsWith("Group"));
-    groups = lines.map((line) => {
-      return parseInt(line.split(": ")[1].split(" ")[0], 10);
-    });
+  const today = new Date();
+  const dateString = `${today.getFullYear()}_${String(
+    today.getMonth() + 1,
+  ).padStart(2, "0")}_${String(today.getDate()).padStart(2, "0")}`;
+  const filename = `groups_log_${dateString}.json`;
+
+  if (fs.existsSync(filename)) {
+    const data = fs.readFileSync(filename, "utf8");
+    const jsonData = JSON.parse(data);
+    groupsData = jsonData; // Store full group objects
+    groups = jsonData.map((group) => group.people);
 
     totalPeople = groups.reduce((acc, num) => acc + num, 0);
 
     console.clear();
     console.table(
-      groups.reduce((acc, numPeople, index) => {
-        acc[`Group ${index + 1}`] = { "# of People": numPeople };
+      groupsData.reduce((acc, groupObj, index) => {
+        acc[`Group ${index + 1}`] = {
+          "# of People": groupObj.people,
+          Time: formatTime12Hour(groupObj.timestamp),
+        };
         return acc;
       }, {}),
     );
@@ -47,12 +70,21 @@ const promptUser = () => {
       } else {
         groups.push(numPeople);
         totalPeople += numPeople;
-        const logData = `${groups
-          .map((numPeople, index) => `Group ${index + 1}: ${numPeople} people`)
-          .join("\n")}\n\nCurrent count of groups: ${
-          groups.length
-        }\nTotal people: ${totalPeople}\n`;
-        fs.writeFileSync(`groups_log_${new Date().getFullYear()}.txt`, logData);
+
+        // Create new group object with current timestamp
+        const now = new Date();
+        const timestamp = now.toTimeString().split(" ")[0]; // Gets HH:MM:SS format
+        const newGroup = {
+          id: groupsData.length + 1,
+          people: numPeople,
+          timestamp: timestamp,
+        };
+
+        // Add to groupsData array
+        groupsData.push(newGroup);
+
+        // Save to JSON file
+        fs.writeFileSync(filename, JSON.stringify(groupsData, null, 2));
       }
 
       promptUser();
