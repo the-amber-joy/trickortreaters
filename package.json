@@ -1,0 +1,31 @@
+{
+  "name": "trickortreaters",
+  "version": "1.0.0",
+  "description": "A simple app to track trick-or-treater groups with timestamps",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "start": "node app.js"
+  },
+  "keywords": [
+    "halloween",
+    "trick-or-treat",
+    "tracking",
+    "groups"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "*.js",
+      "!app.test.js",
+      "!jest.config.js"
+    ]
+  }
+}
